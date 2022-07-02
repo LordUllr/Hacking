@@ -1,61 +1,247 @@
 #Script NMap Automation
 
-import nmap
+import os
+import sys
+from art import *
+from termcolor import colored
 
-scanner = nmap.PortScanner()
-
-spacer = "-" * 50
-apr = "Hello, I'm a simple port scanner with Nmap Tool"
-
-#Apresentation
-print(spacer)
-print(apr.center(50))
-print(spacer)
-
-#Functions
+ans = True
+separator = "=" * 100
 
 
-def n_scan(host, prot_type, type): #Scan the IP
-    scanner.scan(host, '1-1024', prot_type[type][1])
-    if scanner[host].state() == 'up':
-        print(f"Scanner Status: \033[1;32m{scanner[host].state()}\033[0;0m")
-        print(spacer)
-        print(f"Host: \033[1;32m{host} ({scanner[host].hostname()})\033[0;0m")
-        for proto in scanner[host].all_protocols():
-            print(spacer)
-            print(f"Protocol : \033[1;32m{proto}\033[0;0m")
-            lport = scanner[host][proto].keys()
-            for port in lport:
-                print(f"port : \033[1;32m{port} \033[0;0m\tstate : \033[1;32m{scanner[host][proto][port]['state']}\033[0;0m")
+def menu():
+    global ans
+
+    clear()
+
+    while ans:
+        print(separator)
+        print(colored(text2art("NMap Automation"), "cyan"))
+        print(colored("Created By: LordUllr", "magenta"))
+        print(colored("Version: 1.0", "red"))
+        print(separator)
+
+        print(
+            colored("\n1. Scan An IP Address For Open Ports using TCP",
+                         "yellow",
+                         attrs=["bold"]))
+        print(
+            colored("2. Scan An IP Address For Open Ports using UDP",
+                         "yellow",
+                         attrs=["bold"]))
+        print(colored("3. Operating System Scan", "yellow", attrs=["bold"]))
+        print(
+            colored("4. Agressive Scan For An IP Address",
+                         "yellow",
+                         attrs=["bold"]))
+        print(
+            colored("5. Scan The Network For All Devices",
+                         "yellow",
+                         attrs=["bold"]))
+        print(
+            colored("6. Exit\n", "yellow", attrs=["bold"])
+        )
+        print(colored("-" * 48, "green"))
+        opt = input(colored("What would you like to do? Enter your selection: ", "green")).upper()
+
+        if opt == "1":
+            tcp_scan()
+        if opt == "2":
+            udp_scan()
+        if opt == "3":
+            os_scan()
+        if opt == "4":
+            a_scan()
+        if opt == "5":
+            net_scan()
+        if opt == "6":
+            print(colored(text2art("\nBye!", "small"), "red"))
+            ans = False
+        else:
+            n_valid(menu, int(opt))
+
+
+def clear():
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def n_valid(func, var):
+    if var > 6:
+        clear()
+
+        print(
+            colored("\nNot Valid Choice Try Again\n",
+                    "red",
+                    attrs=["reverse"]))
+        func()
+
+
+def create_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def dir_output(var, path, url):
+    if len(var) == 0:
+        var = path + "/" + url
+        return var
+
+
+def tcp_scan():
+    global ans
+    clear()
+
+    print(colored("=" * 52, "cyan"))
+    print(colored(text2art("TCP SCAN"), "cyan"))
+    print(colored("=" * 52, "cyan"))
+    tcp_host = input(
+        colored("Enter the IP you want scan: ", "green")
+    )
+    exp = input(colored("\nWant export result to file?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if exp in "yY":
+        tcp_output = str(input(colored(f"Enter the output folder - [default: reports/Nmap/{tcp_host}/]: ",
+                "green",
+            )))
+        tcp_output = dir_output(tcp_output, "reports/Nmap/", tcp_host)
+        create_dir(tcp_output)
+        os.system(f"sudo nmap -sS {tcp_host} -o {tcp_output}/tcpscan.txt")
+        print(colored("File exported", "green"))
     else:
-        print(f"The IP \033[1;32m{host}\033[0;0m is \033[1;31mDown\033[0;0m!")
-
-
-def select_type(): #Select the type of scan
-    type = int(input("\033[1;30m\033[1;102mSelect the type of scan you want to run:\n\033[0;0m"
-                     "1. SYN ACK Scan\n"
-                     "2. UDP Scan\n"
-                     "3. Comprehensive Scan\n"))
-    prot_type = {1: ["SYN ACK Scan", "-v -sS"], 2: ["UDP Scan", "-v -sU"],
-              3: ["Comprehensive Scan", "-v -sS -sV -sC -A -O"]}
-    if type not in prot_type.keys():
-        print("\033[1;91mPlease, insert a valid option!\033[0;0m")
-        return select_type()
+        os.system(f"sudo nmap -v -sS {tcp_host}")
+    opt = input(colored("\nReturn to main menu?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if opt in "yY":
+        clear()
+        menu()
     else:
-        print(f"You have select \033[1;30m{prot_type[type][0]}\033[0;0m\n\033[1;33mStarting Scan!\033[0;0m")
-        n_scan(host, prot_type, type)
+        print(colored(text2art("\nBye!", "small"), "red"))
+        ans = False
 
 
-def add_host(): #add the ip of host to scan
-    global host
-    host = str(input("\033[1;30m\033[1;102mPlease, enter the IP adrress you want to scan:\n\033[0;0m"))
-    print(f"The IP is: \033[1;92m{host}\033[0;0m")
-    confirm = input("Correct?\n\033[1;92m(Y)Yes\033[0;0m / \033[1;91m(N)No\033[0;0m\n")
-    while confirm not in "yY":
-        return add_host()
+def udp_scan():
+    global ans
+    clear()
+
+    print(colored("=" * 52, "green"))
+    print(colored(text2art("UDP SCAN"), "green"))
+    print(colored("=" * 52, "green"))
+    udp_host = input(
+        colored("Enter the IP you want scan: ", "green")
+    )
+    exp = input(colored("\nWant export result to file?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if exp in "yY":
+        udp_output = str(input(colored(f"Enter the output folder - [default: reports/Nmap/{udp_host}/]: ",
+                "green",
+            )))
+        udp_output = dir_output(udp_output, "reports/Nmap/", udp_host)
+        create_dir(udp_output)
+        os.system(f"sudo nmap -sU {udp_host} -o {udp_output}/udpscan.txt")
+        print(colored("File exported", "green"))
     else:
-        select_type()
-        return host
+        os.system(f"sudo nmap -v -sU {udp_host}")
+    opt = input(colored("\nReturn to main menu?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if opt in "yY":
+        clear()
+        menu()
+    else:
+        print(colored(text2art("\nBye!", "small"), "red"))
+        ans = False
 
 
-add_host()
+def os_scan():
+    global ans
+    clear()
+
+    print(colored("=" * 52, "yellow"))
+    print(colored(text2art("OS SCAN"), "yellow"))
+    print(colored("=" * 52, "yellow"))
+    os_host = input(
+        colored("Enter the IP you want scan: ", "green")
+    )
+    exp = input(colored("\nWant export result to file?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if exp in "yY":
+        os_output = str(input(colored(f"Enter the output folder - [default: reports/Nmap/{os_host}/]: ",
+                "green",
+            )))
+        os_output = dir_output(os_output, "reports/Nmap/", os_host)
+        create_dir(os_output)
+        os.system(f"sudo nmap -O {os_host} -o {os_output}/osscan.txt")
+        print(colored("File exported", "green"))
+    else:
+        os.system(f"sudo nmap -O {os_host}")
+    opt = input(colored("\nReturn to main menu?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if opt in "yY":
+        clear()
+        menu()
+    else:
+        print(colored(text2art("\nBye!", "small"), "red"))
+        ans = False
+
+
+def a_scan():
+    global ans
+    clear()
+
+    print(colored("=" * 96, "red"))
+    print(colored(text2art("AGRESSIVE SCAN"), "red"))
+    print(colored("=" * 96, "red"))
+    a_host = input(
+        colored("Enter the IP you want scan: ", "green")
+    )
+    exp = input(colored("\nWant export result to file?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if exp in "yY":
+        a_output = str(input(colored(f"Enter the output folder - [default: reports/Nmap/{a_host}/]: ",
+                "green",
+            )))
+        a_output = dir_output(a_output, "reports/Nmap/", a_host)
+        create_dir(a_output)
+        os.system(f"sudo nmap -T4 -A {a_host} -o {a_output}/ascan.txt")
+        print(colored("File exported", "green"))
+    else:
+        os.system(f"sudo nmap -T4 -A {a_host}")
+    opt = input(colored("\nReturn to main menu?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if opt in "yY":
+        clear()
+        menu()
+    else:
+        print(colored(text2art("\nBye!", "small"), "red"))
+        ans = False
+
+
+def net_scan():
+    global ans
+    clear()
+
+    print(colored("=" * 96, "red"))
+    print(colored(text2art("AGRESSIVE SCAN"), "red"))
+    print(colored("=" * 96, "red"))
+    net_host = input(
+        colored("Enter your address and range (i.e. 192.168.0.1/24) now: ", "green")
+    )
+    net_sort = net_host.split("/", 1)
+    net_sort = net_sort[0]
+    exp = input(colored("\nWant export result to file?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if exp in "yY":
+        net_output = str(input(colored(f"Enter the output folder - [default: reports/Nmap/{net_sort}/]: ",
+                "green",
+            )))
+        net_output = dir_output(net_output, "reports/Nmap/", net_sort)
+        create_dir(net_output)
+        os.system(f"sudo nmap -sn {net_host} -o {net_output}/netscan.txt")
+        print(colored("File exported", "green"))
+    else:
+        os.system(f"sudo nmap -sn {net_host}")
+    opt = input(colored("\nReturn to main menu?\n Y - Yes\n N - No\n >>> ", "green")).upper()
+    if opt in "yY":
+        clear()
+        menu()
+    else:
+        print(colored(text2art("\nBye!", "small"), "red"))
+        ans = False
+
+
+try:
+    menu()
+
+except KeyboardInterrupt:
+    print("\n \n Keyboard Interrupt. ")
+    sys.exit()
